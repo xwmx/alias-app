@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+# appalias
+#
+# Create an OS X application that simply opens another OS X application.
+#
+# Usage:
+#
+#   appalias Example.app ExampleAlias.app
+
+require 'tempfile'
+
+source = ARGV[0]
+target = ARGV[1]
+
+if ARGV[0] == "-h" || !ARGV[0] || !ARGV[1]
+  puts  "Description: Create an OS X application that simply opens another OS X application.\n" +
+    "Usage: appalias source.app destination.app"
+elsif source !~ /.app$/ || target !~ /.app$/
+  puts "Error: Both source and target must have a .app extensions."
+else
+  source_icon = ""
+  info_plist = "#{source}/Contents/Info.plist"
+  icon_filename = %x[/usr/libexec/PlistBuddy -c Print:CFBundleIconFile #{info_plist}]
+  unless icon_filename.empty?
+    source_icon = "#{source}/Contents/Resources/#{icon_filename}".strip
+    target_icon = "#{target}/Contents/Resources/applet.icns".strip
+  end
+
+  full_source_path = File.expand_path(source)
+
+  shellscript = %Q|#!/usr/env/bash\n| +
+                %Q|open #{full_source_path}|
+  applescript = %Q|#!/usr/bin/osascript\n| +
+                %Q|do shell script "#{shellscript}"|
+
+
+  t = Tempfile.new('applescript', '/tmp').tap do |file|
+    file.write(applescript)
+  end
+  t.rewind
+
+  %x[osacompile -o #{target} #{t.path}]
+
+  unless source_icon.empty?
+    %x[rm #{target_icon} && cp #{source_icon} #{target_icon}]
+  end
+end
