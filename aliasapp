@@ -15,51 +15,136 @@
 #   aliasapp Example.app ExampleAlias.app
 
 require 'tempfile'
+require 'fileutils'
 
-source = ARGV[0]
-target = ARGV[1]
+# Add convenience methods to Object.
+class Object
+  def blank?; respond_to?(:empty?) ? !!empty? : !self end
+  def present?; !blank? end
+end
 
-if ARGV[0] == "-h" || !ARGV[0] || !ARGV[1]
-  puts  "Description: Create an OS X application that simply opens another OS X application.\n" +
-    "Usage: aliasapp source.app destination.app"
-elsif source !~ /.app$/ || target !~ /.app$/
-  puts "Error: Both source and target must have a .app extensions."
-else
-  # Grab get source and target icon
-  source_icon = ""
-  info_plist = "#{source}/Contents/Info.plist"
-  icon_filename = %x[/usr/libexec/PlistBuddy -c Print:CFBundleIconFile #{info_plist}].strip
-  if !icon_filename.empty? && icon_filename !~ /\.icns/
-    icon_filename = "#{icon_filename}.icns"
-    puts icon_filename
+# Aliasapp
+#
+# Contains the core functionality and child modules for creating application
+# aliases.
+module Aliasapp
+  HELP = "Description: Create an OS X application that simply opens another OS X application.\n" +
+         "Usage: aliasapp source.app destination.app"
+  FORMAT_ERROR = "Error: Both source and target must have a .app extensions."
+  EXISTS_ERROR = "Error: File already exists at specified location."
+
+  # Determine whether to display help or feedback, and if not, create the
+  # alias and copy the icon.
+  def self.create!(source, target)
+    case
+    when Aliasapp.needs_help?
+      puts Aliasapp::HELP
+    when Aliasapp.bad_opt_format?(source, target)
+      puts Aliasapp::FORMAT_ERROR
+    when Aliasapp.already_exists?(target)
+      puts Aliasapp::EXISTS_ERROR
+    else
+      Aliasapp::Alias.create!(source, target)
+      Aliasapp::Icon.copy!(source, target)
+    end
   end
-  unless icon_filename.empty?
-    source_icon = "#{source}/Contents/Resources/#{icon_filename}".strip
-    target_icon = "#{target}/Contents/Resources/applet.icns".strip
+
+  # Check if the first argument is '-h' or if either of the arguments is
+  # missing.
+  def self.needs_help?
+    ARGV[0] == "-h" || !ARGV[0] || !ARGV[1]
   end
 
-  full_source_path = File.expand_path(source)
-
-  # Shell script wrapper. Equivalent to:
-  # $ open /Path/To/Application.app
-  shellscript = %Q|#!/usr/env/bash\n| +
-                %Q|open #{full_source_path}|
-  # Wrap shell script in a simple AppleScript
-  applescript = %Q|#!/usr/bin/osascript\n| +
-                %Q|do shell script "#{shellscript}"|
-
-
-  # Write AppleScript to temfile
-  t = Tempfile.new('applescript', '/tmp').tap do |file|
-    file.write(applescript)
+  # Confirm that each of the arguments has a .app file extension.
+  def self.bad_opt_format?(source, target)
+    source !~ /.app$/ || target !~ /.app$/
   end
-  t.rewind
 
-  # Compile to app bundle
-  %x[osacompile -o #{target} #{t.path}]
+  # Check whether a file already exists at the target location.
+  def self.already_exists?(target)
+    File.exists?(target)
+  end
 
-  # If a source icon was successfully specified, copy it into the alias app.
-  unless source_icon.empty?
-    %x[rm #{target_icon} && cp #{source_icon} #{target_icon}]
+  # Aliasapp::Alias
+  #
+  # Functions for building and constructing the "alias" application bundle.
+  module Alias
+
+    # Given source and target application paths, build a wrapper script and
+    # compile a new "alias" application at the target path.
+    def self.create!(source, target)
+      full_source_path = File.expand_path(source)
+
+      # Shell script wrapper. Equivalent to:
+      # $ open /Path/To/Application.app
+      shellscript = %Q|#!/usr/bin/env bash\n| +
+                    %Q|open \\"#{full_source_path}\\"|
+      # Wrap shell script in a simple AppleScript
+      applescript = %Q|#!/usr/bin/osascript\n| +
+                    %Q|do shell script "#{shellscript}"|
+
+      Aliasapp::Alias.compile!(applescript, target)
+    end
+
+    # Use osacompile to compile an application bundle containing the provided
+    # applescript content.
+    def self.compile!(applescript, target)
+      # Write AppleScript to tempfile
+      t = Tempfile.new('applescript', '/tmp').tap do |file|
+        file.write(applescript)
+      end
+      t.rewind
+
+      # Compile to app bundle
+      command = %Q|osacompile -o "#{target}" #{t.path}|
+      %x[#{command}]
+    end
+  end
+
+  # Aliasapp::Icon
+  #
+  # Functions for determinging the source icon and copying it to the "alias"
+  # application bundle.
+  module Icon
+
+    # Return the filename for the icon specified in the source application's
+    # Info.plist. If the filename is missing the .icns file extenstion, add
+    # it to the filename before returning.
+    def self.source_filename(source)
+      plist = File.join(source, 'Contents', 'Info.plist')
+      filename = %x[/usr/libexec/PlistBuddy -c Print:CFBundleIconFile "#{plist}"].strip
+      if filename.present? && filename !~ /\.icns/
+        filename = "#{filename}.icns"
+      end
+      filename
+    end
+
+    # Return the path of the source application's icon.
+    def self.source_path(source)
+      filename = Aliasapp::Icon.source_filename(source)
+      if filename.present?
+        path = File.join(source, 'Contents', 'Resources', filename)
+      end
+      path || ""
+    end
+
+    # Return the path of the wrapper application's icon.
+    def self.target_path(target)
+      File.join(target, "/Contents/Resources/applet.icns")
+    end
+
+    # Given source and target application paths, copy the icon from the source
+    # to the target application.
+    def self.copy!(source, target)
+      source_icon = Aliasapp::Icon.source_path(source)
+      target_icon = Aliasapp::Icon.target_path(target)
+      if source_icon.present?
+        FileUtils.rm(target_icon)
+        FileUtils.cp(source_icon, target_icon)
+      end
+    end
   end
 end
+
+# Start
+Aliasapp.create!(ARGV[0], ARGV[1])
