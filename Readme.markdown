@@ -1,6 +1,6 @@
 # appalias
 
-Create an OS X application that simply opens another OS X application.
+Create an OS X "alias" application that simply opens another OS X application.
 
 ## Usage
 
@@ -10,7 +10,8 @@ Create an OS X application that simply opens another OS X application.
 
 Creates an OS X application bundle that simply opens another OS X
 application. The icon used by the original application is also used for
-the alias application.
+the alias application. In effect, this creates an application alias that
+is recognized in Spotlight and the rest of the system as an application.
 
 ### Example Use Case
 
