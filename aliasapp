@@ -75,13 +75,10 @@ module Aliasapp
     def self.create!(source, target)
       full_source_path = File.expand_path(source)
 
-      # Shell script wrapper. Equivalent to:
-      # $ open /Path/To/Application.app
-      shellscript = %Q|#!/usr/bin/env bash\n| +
-                    %Q|open \\"#{full_source_path}\\"|
-      # Wrap shell script in a simple AppleScript
+      # Create simple AppleScript that tells the target application to open.
       applescript = %Q|#!/usr/bin/osascript\n| +
-                    %Q|do shell script "#{shellscript}"|
+                    %Q|tell application "#{full_source_path}" to activate|
+
 
       Aliasapp::Alias.compile!(applescript, target)
     end
