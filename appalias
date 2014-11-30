@@ -18,6 +18,7 @@ if ARGV[0] == "-h" || !ARGV[0] || !ARGV[1]
 elsif source !~ /.app$/ || target !~ /.app$/
   puts "Error: Both source and target must have a .app extensions."
 else
+  # Grab get source and target icon
   source_icon = ""
   info_plist = "#{source}/Contents/Info.plist"
   icon_filename = %x[/usr/libexec/PlistBuddy -c Print:CFBundleIconFile #{info_plist}]
@@ -28,19 +29,25 @@ else
 
   full_source_path = File.expand_path(source)
 
+  # Shell script wrapper. Equivalent to:
+  # $ open /Path/To/Application.app
   shellscript = %Q|#!/usr/env/bash\n| +
                 %Q|open #{full_source_path}|
+  # Wrap shell script in a simple AppleScript
   applescript = %Q|#!/usr/bin/osascript\n| +
                 %Q|do shell script "#{shellscript}"|
 
 
+  # Write AppleScript to temfile
   t = Tempfile.new('applescript', '/tmp').tap do |file|
     file.write(applescript)
   end
   t.rewind
 
+  # Compile to app bundle
   %x[osacompile -o #{target} #{t.path}]
 
+  # If a source icon was successfully specified, copy it into the alias app.
   unless source_icon.empty?
     %x[rm #{target_icon} && cp #{source_icon} #{target_icon}]
   end
