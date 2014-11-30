@@ -28,7 +28,11 @@ else
   # Grab get source and target icon
   source_icon = ""
   info_plist = "#{source}/Contents/Info.plist"
-  icon_filename = %x[/usr/libexec/PlistBuddy -c Print:CFBundleIconFile #{info_plist}]
+  icon_filename = %x[/usr/libexec/PlistBuddy -c Print:CFBundleIconFile #{info_plist}].strip
+  if !icon_filename.empty? && icon_filename !~ /\.icns/
+    icon_filename = "#{icon_filename}.icns"
+    puts icon_filename
+  end
   unless icon_filename.empty?
     source_icon = "#{source}/Contents/Resources/#{icon_filename}".strip
     target_icon = "#{target}/Contents/Resources/applet.icns".strip
