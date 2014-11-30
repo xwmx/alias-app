@@ -1,3 +1,11 @@
+             ___
+      ____ _/ (_)___ __________ _____  ____
+     / __ `/ / / __ `/ ___/ __ `/ __ \/ __ \
+    / /_/ / / / /_/ (__  ) /_/ / /_/ / /_/ /
+    \__,_/_/_/\__,_/____/\__,_/ .___/ .___/
+                             /_/   /_/
+
+
 # aliasapp
 
 Create an OS X "alias" application that simply opens another OS X application.
