@@ -1,10 +1,10 @@
-# appalias
+# aliasapp
 
 Create an OS X "alias" application that simply opens another OS X application.
 
 ## Usage
 
-    appalias Example.app ExampleAlias.app
+    aliasapp Example.app ExampleAlias.app
 
 ## Description
 
@@ -24,7 +24,7 @@ In order to create an application bundle that is indexed by Spotlight
 and that opens an instance of MacVim installed with Homebrew, we can use
 the following command:
 
-    appalias /usr/local/Cellar/macvim/7.4-73_1/MacVim.app /Applications/MacVim.app
+    aliasapp /usr/local/Cellar/macvim/7.4-73_1/MacVim.app /Applications/MacVim.app
 
 `/Applications/MacVim.app` can now be used to open the homebrew-install MacVim.
 

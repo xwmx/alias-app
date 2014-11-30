@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
-# appalias
+# aliasapp
 #
 # Create an OS X application that simply opens another OS X application.
 #
 # Usage:
 #
-#   appalias Example.app ExampleAlias.app
+#   aliasapp Example.app ExampleAlias.app
 
 require 'tempfile'
 
@@ -14,7 +14,7 @@ target = ARGV[1]
 
 if ARGV[0] == "-h" || !ARGV[0] || !ARGV[1]
   puts  "Description: Create an OS X application that simply opens another OS X application.\n" +
-    "Usage: appalias source.app destination.app"
+    "Usage: aliasapp source.app destination.app"
 elsif source !~ /.app$/ || target !~ /.app$/
   puts "Error: Both source and target must have a .app extensions."
 else
