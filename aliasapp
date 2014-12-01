@@ -13,6 +13,7 @@
 # Usage:
 #
 #   aliasapp Example.app ExampleAlias.app
+#   aliasapp --target ExampleAlias.app
 
 require 'tempfile'
 require 'fileutils'
@@ -29,7 +30,9 @@ end
 # aliases.
 module Aliasapp
   HELP = "Description: Create an OS X application that simply opens another OS X application.\n" +
-         "Usage: aliasapp source.app destination.app"
+         "Example usage:\n" +
+         "  aliasapp source.app destination.app\n" +
+         "  aliasapp --target alias.app"
   FORMAT_ERROR = "Error: Both source and target must have a .app extensions."
   EXISTS_ERROR = "Error: File already exists at specified location."
 
@@ -39,6 +42,8 @@ module Aliasapp
     case
     when Aliasapp.needs_help?
       puts Aliasapp::HELP
+    when Aliasapp.wants_target?(source)
+      Aliasapp::Target.print(target)
     when Aliasapp.bad_opt_format?(source, target)
       puts Aliasapp::FORMAT_ERROR
     when Aliasapp.already_exists?(target)
@@ -52,7 +57,15 @@ module Aliasapp
   # Check if the first argument is '-h' or if either of the arguments is
   # missing.
   def self.needs_help?
-    ARGV[0] == "-h" || !ARGV[0] || !ARGV[1]
+    return true if ARGV[0] == "-h"
+    return true if !ARGV[0]
+    return true if !ARGV[1]
+    return false
+  end
+
+  # Check if the `--target` flag has been specified.
+  def self.wants_target?(source)
+    source == "--target"
   end
 
   # Confirm that each of the arguments has a .app file extension.
@@ -71,6 +84,7 @@ module Aliasapp
   module Alias
     APP_ALIAS_DIR = File.join("Contents", "Resources", "Alias")
     APP_ALIAS_FILENAME = "AppAlias"
+    APP_ALIAS_FILE = File.join(APP_ALIAS_DIR, APP_ALIAS_FILENAME)
     APPLESCRIPT_TEMPLATE = <<-TEMPLATE
 #!/usr/bin/osascript
 set app_path to (path to me)
@@ -166,6 +180,28 @@ TEMPLATE
       if source_icon.present?
         FileUtils.rm(target_icon)
         FileUtils.cp(source_icon, target_icon)
+      end
+    end
+  end
+
+  # Functions for working with the alias target.
+  module Target
+    # Print the target path
+    def self.print(target)
+      alias_path = File.join(target, Aliasapp::Alias::APP_ALIAS_FILE)
+      resolve_script = <<-TEMPLATE
+tell application "Finder"
+  set theItem to (POSIX file "#{alias_path}") as alias
+  if the kind of theItem is "alias" then
+    get the POSIX path of (original item of theItem as text)
+  end if
+end tell
+TEMPLATE
+      original_path = %x[osascript -e '#{resolve_script}']
+      if original_path.present?
+        puts original_path
+      else
+        puts "Error: unable to determine target path."
       end
     end
   end
