@@ -69,18 +69,21 @@ module Aliasapp
   #
   # Functions for building and constructing the "alias" application bundle.
   module Alias
+    APP_ALIAS_DIR = File.join("Contents", "Resources", "Alias")
+    APP_ALIAS_FILENAME = "AppAlias"
+    APPLESCRIPT_TEMPLATE = <<-TEMPLATE
+#!/usr/bin/osascript
+set app_path to (path to me)
+tell application (POSIX path of app_path & "#{APP_ALIAS_DIR}/#{APP_ALIAS_FILENAME}") to activate
+TEMPLATE
 
     # Given source and target application paths, build a wrapper script and
     # compile a new "alias" application at the target path.
     def self.create!(source, target)
-      full_source_path = File.expand_path(source)
 
-      # Create simple AppleScript that tells the target application to open.
-      applescript = %Q|#!/usr/bin/osascript\n| +
-                    %Q|tell application "#{full_source_path}" to activate|
+      Aliasapp::Alias.compile!(Aliasapp::Alias::APPLESCRIPT_TEMPLATE, target)
+      Aliasapp::Alias.create_alias!(source, target)
 
-
-      Aliasapp::Alias.compile!(applescript, target)
     end
 
     # Use osacompile to compile an application bundle containing the provided
@@ -95,6 +98,31 @@ module Aliasapp
       # Compile to app bundle
       command = %Q|osacompile -o "#{target}" #{t.path}|
       %x[#{command}]
+    end
+
+    # Use an AppleScript call to create an OS X alias to the target application
+    # within the aliasapp-created application bundle. This alias is then given
+    # the name referenced in the launcher script.
+    def self.create_alias!(source, target)
+      full_source_path = File.expand_path(source)
+      full_target_path = File.expand_path(target)
+      alias_dir_path = File.join(full_target_path, Aliasapp::Alias::APP_ALIAS_DIR)
+
+      # Create the directory in the application for the alias.
+      FileUtils.mkdir(alias_dir_path)
+
+      # Use AppleScript to create an OS X alias file.
+      alias_script = %Q|tell application "Finder" to make new alias | +
+                     %Q|at POSIX file "#{alias_dir_path}" | +
+                     %Q|to POSIX file "#{full_source_path}"|
+      %x[osascript -e '#{alias_script}']
+
+      # Rename the file to the name expected by the compiled script.
+      alias_file = Dir["#{alias_dir_path}/*"][0]
+      File.rename(
+        alias_file, File.join(alias_dir_path, Aliasapp::Alias::APP_ALIAS_FILENAME)
+      )
+
     end
   end
 
