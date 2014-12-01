@@ -85,27 +85,26 @@ module Aliasapp
     APP_ALIAS_DIR = File.join("Contents", "Resources", "Alias")
     APP_ALIAS_FILENAME = "AppAlias"
     APP_ALIAS_FILE = File.join(APP_ALIAS_DIR, APP_ALIAS_FILENAME)
-    APPLESCRIPT_TEMPLATE = <<-TEMPLATE
-#!/usr/bin/osascript
-set app_path to (path to me)
-do shell script "open " & quoted form of POSIX path of app_path & "#{APP_ALIAS_DIR}/#{APP_ALIAS_FILENAME}"
-TEMPLATE
 
     # Given source and target application paths, build a wrapper script and
     # compile a new "alias" application at the target path.
     def self.create!(source, target)
-
-      Aliasapp::Alias.compile!(Aliasapp::Alias::APPLESCRIPT_TEMPLATE, target)
+      Aliasapp::Alias.compile!(target)
       Aliasapp::Alias.create_alias!(source, target)
-
     end
 
     # Use osacompile to compile an application bundle containing the provided
     # applescript content.
-    def self.compile!(applescript, target)
+    def self.compile!(target)
+      launcher_script = <<-TEMPLATE
+#!/usr/bin/osascript
+set app_path to (path to me)
+do shell script "open " & quoted form of POSIX path of app_path & "#{Aliasapp::Alias::APP_ALIAS_FILE}"
+TEMPLATE
+
       # Write AppleScript to tempfile
-      t = Tempfile.new('applescript', '/tmp').tap do |file|
-        file.write(applescript)
+      t = Tempfile.new('aliasapp_applescript', '/tmp').tap do |file|
+        file.write(launcher_script)
       end
       t.rewind
 
