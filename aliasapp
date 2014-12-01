@@ -74,7 +74,7 @@ module Aliasapp
     APPLESCRIPT_TEMPLATE = <<-TEMPLATE
 #!/usr/bin/osascript
 set app_path to (path to me)
-tell application (POSIX path of app_path & "#{APP_ALIAS_DIR}/#{APP_ALIAS_FILENAME}") to activate
+do shell script "open " & quoted form of POSIX path of app_path & "#{APP_ALIAS_DIR}/#{APP_ALIAS_FILENAME}"
 TEMPLATE
 
     # Given source and target application paths, build a wrapper script and
