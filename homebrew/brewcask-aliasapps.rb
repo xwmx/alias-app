@@ -42,3 +42,5 @@ files_in_apps.each do |file|
     end
   end
 end
+
+puts "Finished aliasing cask applications. Find the alias applications under #{target_dir}."

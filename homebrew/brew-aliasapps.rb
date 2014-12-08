@@ -39,5 +39,5 @@ HOMEBREW_CELLAR.subdirs.each do |rack|
   end
 end
 
-puts "Finished aliasing. Find the alias applications under #{target_dir}."
+puts "Finished aliasing homebrew applications. Find the alias applications under #{target_dir}."
 
