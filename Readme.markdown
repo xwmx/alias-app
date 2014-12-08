@@ -1,18 +1,18 @@
              ___
-      ____ _/ (_)___ __________ _____  ____
-     / __ `/ / / __ `/ ___/ __ `/ __ \/ __ \
-    / /_/ / / / /_/ (__  ) /_/ / /_/ / /_/ /
-    \__,_/_/_/\__,_/____/\__,_/ .___/ .___/
-                             /_/   /_/
+      ____ _/ (_)___ ______      ____ _____  ____
+     / __ `/ / / __ `/ ___/_____/ __ `/ __ \/ __ \
+    / /_/ / / / /_/ (__  )_____/ /_/ / /_/ / /_/ /
+    \__,_/_/_/\__,_/____/      \__,_/ .___/ .___/
+                                   /_/   /_/
 
 
-# aliasapp
+# alias-app
 
 Create an OS X "alias" application that simply opens another OS X application.
 
 ## Usage
 
-    aliasapp Example.app ExampleAlias.app
+    alias-app Example.app ExampleAlias.app
 
 ## Description
 
@@ -32,7 +32,7 @@ In order to create an application bundle that is indexed by Spotlight
 and that opens an instance of MacVim installed with Homebrew, we can use
 the following command:
 
-    aliasapp /usr/local/Cellar/macvim/7.4-73_1/MacVim.app /Applications/MacVim.app
+    alias-app /usr/local/Cellar/macvim/7.4-73_1/MacVim.app /Applications/MacVim.app
 
 `/Applications/MacVim.app` can now be used to open the homebrew-install MacVim.
 
@@ -50,5 +50,6 @@ symlinking applications in the local `~/Applications` directory. While
 this is the default for homebrew cask, homebrew requires using the `--local`
 flag when linking apps, ie, using the following command: `brew linkapps --local`*
 
-Neither of the homebrew commands are required by `aliasapp` itself, and
-the `aliasapp` command can be used completely independently of them.
+Neither of the homebrew commands are required by `alias-app` itself, and
+the `alias-app` command can be used completely independently of them.
+

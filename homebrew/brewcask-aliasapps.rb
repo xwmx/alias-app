@@ -38,7 +38,7 @@ files_in_apps.each do |file|
       app_name = File.basename(file)
       target = File.join(target_dir, app_name)
 
-      system "aliasapp", source, target
+      system "alias-app", source, target
     end
   end
 end

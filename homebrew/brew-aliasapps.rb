@@ -35,7 +35,7 @@ HOMEBREW_CELLAR.subdirs.each do |rack|
     app_name = File.basename(app)
     target = File.join(target_dir, app_name)
 
-    system "aliasapp", app, target
+    system "alias-app", app, target
   end
 end
 
