@@ -36,4 +36,19 @@ the following command:
 
 `/Applications/MacVim.app` can now be used to open the homebrew-install MacVim.
 
+## Homebrew Commands
 
+Since this is particularly useful for linking homebrew-installed
+applications, included in the `homebrew` directory are commands for
+aliasing applications installed by both homebrew and homebrew cask. To
+use them, symlink them from a location in your `$PATH` (eg, `~/bin/`)
+and call them using either `brew aliasapps` or `brew cask aliasapps`
+(for homebrew and homebrew cask, respectively) after installing new applications.
+
+*Note: both script assume that your both homebrew and homebrew cask are
+symlinking applications in the local `~/Applications` directory. While
+this is the default for homebrew cask, homebrew requires using the `--local`
+flag when linking apps, ie, using the following command: `brew linkapps --local`*
+
+Neither of the homebrew commands are required by `aliasapp` itself, and
+the `aliasapp` command can be used completely independently of them.
